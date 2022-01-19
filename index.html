@@ -31,14 +31,25 @@
         {
                  var canvas = document.getElementById('canvas');
             
+                 canvas.getContext('2d').strokeStyle = 'green';
+            
            if (canvas.getContext) 
              {
                 var context = canvas.getContext('2d');
 
-                context.fillRect(20,20,100,100);
-                context.clearRect(40,40,60,60);
-                context.strokeRect(45,45,50,50);
-             }
+                //context.fillRect(20,20,100,100);
+                //context.clearRect(40,40,60,60);
+                for(i =1; i<10; i++)
+                  {
+                     for(j=10; j>1; j--)
+                         {
+                             context.strokeRect(i+1,j+1,i*10+50,i*10+50);
+        
+                       }
+      
+                  }
+    
+            }
     }
         
     </script>
