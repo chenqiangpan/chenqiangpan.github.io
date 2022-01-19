@@ -3,58 +3,77 @@
 <body onload="draw();">
 
     <h1>CHEN QIANGPAN's Playground</h1>
-    
+
     <h2 style="color:rgb(255,0,0);">Learn Something</h2>
-    
+
     <h3 style="color:rgb(255,80,0);">Learn Something Everyday</h3>
 
     <p id="demo"></p>
 
     <script>
+
+
+
+
+
+
+        //create some buttons
         let btn = document.createElement("button");
         btn.innerHTML = "Save";
         btn.addEventListener("click", function () {
             alert("Saved ... nothing!");
         });
         document.body.appendChild(btn);
-        
+
         let btn2 = document.createElement("button");
         btn2.innerHTML = "Load";
         btn2.addEventListener("click", function () {
             alert("Loaded...Nothing!");
         });
         document.body.appendChild(btn2);
-        
-        
+
+
         //draw something
-        function draw() 
-        {
-                 var canvas = document.getElementById('canvas');
-            
-                 canvas.getContext('2d').strokeStyle = 'green';
-            
-           if (canvas.getContext) 
-             {
+        function draw() {
+            var canvas = document.getElementById('canvas');
+
+
+
+
+            if (canvas.getContext) {
+
                 var context = canvas.getContext('2d');
+
+
 
                 //context.fillRect(20,20,100,100);
                 //context.clearRect(40,40,60,60);
-                for(i =1; i<10; i++)
-                  {
-                     for(j=10; j>1; j--)
-                         {
-                             context.strokeRect(i+1,j+1,i*10+50,i*10+50);
-        
-                       }
-      
-                  }
-    
+                for (i = 1; i < 10; i++) {
+                    for (j = 10; j > 1; j--) {
+                        context.strokeRect(i + 1, j + 1, i * 10 + 50, i * 10 + 50);
+
+                        context.strokeStyle = "#" + Math.floor(Math.random() * 16777215).toString(16);
+
+                    }
+
+                }
+
             }
-    }
-        
+
+
+
+
+        }
+
+
+
+
+
     </script>
-    
-<canvas id="canvas" width="150" height="150"></canvas>
+
+    <canvas id="canvas" width="150" height="150"></canvas>
+
+    <input type="button" value="See some cool Effect!" onClick="document.location.reload(true)">
 
 </body>
 </html>
