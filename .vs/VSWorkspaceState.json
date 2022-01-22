@@ -1,7 +1,10 @@
 {
   "ExpandedNodes": [
-    ""
+    "",
+    "\\css",
+    "\\js",
+    "\\react"
   ],
-  "SelectedNode": "\\RollingCube.html",
+  "SelectedNode": "\\logs.html",
   "PreviewInSolutionExplorer": false
 }
