@@ -1,0 +1,218 @@
+<DOCTYPE html>
+    <html>
+
+    <head>
+        <title>Vue Demo</title>
+        <meta charset='utf-8' />
+        <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+        <style type="text/css">
+            .box {
+                height: 200px;
+                width: 200px;
+                text-align: center;
+            }
+
+            .red {
+                background-color: red;
+            }
+
+            .green {
+                background-color: green;
+            }
+
+
+
+            .simplebox {
+                height: 200px;
+                width: 200px;
+                background-color: blue;
+            }
+
+            .simplebox2 {
+                height: 200px;
+                width: 200px;
+                background-color: rgb(241, 134, 11);
+                
+            }
+
+
+
+            .fade-enter-active,
+            .fade-leave-active {
+                transition: opacity .5s;
+            }
+
+            .fade-enter,
+            .fade-leave-to
+
+            /* .fade-leave-active below version 2.1.8 */
+                {
+                opacity: 0;
+            }
+
+
+            button {
+                position: relative;
+                display: block;
+                margin: 0 auto;
+                width: 140px;
+                height: 30px;
+                border-radius: 30px;
+                background: #fff;
+                color: #000000;
+                border: none;
+                font-weight: bold;
+                font-size: 12px;
+                cursor: pointer;
+                outline: none;
+            }
+
+            body {
+                -webkit-transition: all 0.4s ease-in-out;
+                transition: all 0.4s ease-in-out;
+            }
+        </style>
+    </head>
+
+
+    <body>
+
+        <p><a href="index.html">Back</a></p>
+
+
+        <h1>Vue Demo Three Ways to Toggle Color</h1>
+
+
+
+
+
+        <div>
+            <p></p>
+        </div>
+
+
+        <div id="vueAppbox">
+            <colored-box class="red" v-show="display == 'redbox'"></colored-box>
+            <colored-box class="green" v-show="display == 'greenbox'"></colored-box>
+
+        </div>
+
+        <div>
+            <p></p>
+        </div>
+
+        <div id="demo">
+            <button v-on:click="show = !show">
+                Toggle Color: Way 2
+            </button>
+            <p key=1 v-if="show">
+                <simple-box></simple-box>
+            </p>
+            <p key=2 v-else>
+                <simple-box2></simple-box2>
+            </p>
+        </div>
+
+
+
+
+        <div id="app">
+            <button @click="generator">Generate Random Color</button>
+            <div style="width: 200px; height: 200px;
+            
+            
+            -webkit-transition: all 0.4s ease-in-out;
+                transition: all 0.4s ease-in-out;" 
+            
+            
+            v-bind:style="{ 'background-color': mycolor }"></div>
+        </div>
+
+
+
+        <div>
+            <p></p>
+        </div>
+
+        <div>
+            <p></p>
+        </div>
+        <div id="app-2">
+            <span v-bind:title="message">
+                Hover your mouse over me for a few seconds
+            </span>
+
+        </div>
+
+
+        <!-- Our View App goes at the end of the document -->
+        <script>
+            Vue.component('ColoredBox', {
+                template: "<div class=\"box\"><button v-on:click=\"toggleMe()\">Toggle Color: Way 1</button></div>",
+
+                methods: {
+                    toggleMe() {
+                        this.$root.toggleBox()
+                    }
+                }
+            })
+
+            Vue.component('SimpleBox', {
+                template: "<div class=\"simplebox\"></div>"
+            })
+            Vue.component('SimpleBox2', {
+                template: "<div class=\"simplebox2\"></div>"
+            })
+
+
+            var app2 = new Vue(
+                {
+                    el: "#app-2",
+                    data: {
+
+                        message: 'the current time is ' + new Date().toLocaleString()
+                    }
+                }
+
+            )
+
+            const vueAppbox = new Vue({
+                el: '#vueAppbox',
+                data: {
+                    display: 'greenbox',
+                    show: true
+                },
+                methods: {
+                    toggleBox() {
+                        this.display == 'redbox' ? this.display = 'greenbox' : this.display = 'redbox'
+                    }
+                }
+            })
+
+
+            new Vue({
+                el: '#demo',
+                data: {
+                    show: true
+                }
+            })
+
+            var app = new Vue({
+                el: '#app',
+                data: {
+                    mycolor: '#' + (Math.random() * 0xFFFFFF << 0).toString(16),
+
+                },
+                methods: {
+                    generator: function () {
+                        this.mycolor = '#' + (Math.random() * 0xFFFFFF << 0).toString(16);
+                    },
+
+                }
+            })
+
+
+        </script>
+    </body>
+
+    </html>
