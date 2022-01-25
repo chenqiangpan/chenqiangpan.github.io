@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html>
+
+    <head>
+        <title>day7_my progress bar</title>
+        <meta charset='utf-8' />
+        <script src="https://cdn.jsdelivr.net/npm/vue@2.6.14"></script>
+        <style type="text/css">
+  
+        </style>
+    </head>
+
+<style>
+    #myProgress {
+        width: 100%;
+        background-color: #ddd;
+    }
+
+    #myBar {
+        width: 1%;
+        height: 30px;
+        background-color: #03a010;
+        text-align: center;
+        /* To center it horizontally (if you want) */
+        line-height: 30px;
+        /* To center it vertically */
+        color: white;
+    }
+
+    #yearProgress {
+        width: 100%;
+        background-color: #ddd;
+    }
+
+    #yearBar {
+        width: 1%;
+        height: 30px;
+        background-color: #be9217;
+        text-align: center;
+        /* To center it horizontally (if you want) */
+        line-height: 30px;
+        /* To center it vertically */
+        color: white;
+    }
+</style>
+
+<body onload="move_myprogress(),move_yearprogress()">
+
+
+    <div id="app-5">
+
+        <h2>
+            <script type="text/javascript">document.write(new Date().getFullYear());</script> Year Progress
+        </h2>
+    
+        <h3>Today is :
+            <script type="text/javascript">document.write(new Date().toDateString());</script>
+        </h3>
+    
+        <h3 id = "daysPast">
+        </h3>
+    
+        <div id="yearProgress">
+            <div id="yearBar"></div>
+        </div>
+    
+        <br>
+        <h2>My Swimming Progress | Goal: 200,000 m</h2>
+        
+        <div id="myProgress">
+            <div id="myBar"></div>
+        </div>
+        <p> {{swimmingUpdate}} meters so far
+        </p>
+        <p>
+            <input name="number" onkeyup="if (/\D/g.test(this.value)) this.value = this.value.replace(/\D/g,'')" v-model="swimmingUpdate">   
+            <button v-on:click="updateProgress">Update progress</button>
+        </p>
+    
+    
+    
+    
+    
+    
+
+    </div>
+
+
+
+    <script>
+
+
+// vue
+
+var app5 = new Vue({
+              el: '#app-5',
+              data: {
+                swimmingUpdate: localStorage.getItem('swimProgress',this.swimmingUpdate)
+              },
+              methods: {
+                updateProgress: function () {
+                      localStorage.setItem('swimProgress',this.swimmingUpdate)
+                      move_myprogress()
+                  }
+              }
+          })
+
+
+
+        // get days of this year
+
+
+
+
+
+        var i = 0;
+        function move_myprogress() {
+            if (i == 0) {
+                i = 1;
+                var elem = document.getElementById("myBar");
+                var width = 1;
+                var id = setInterval(frame, 25);
+                var swimProgress =(localStorage.getItem('swimProgress',this.swimmingUpdate) * (100/200000)).toFixed(2);
+                function frame() {
+                    if (width >= swimProgress) {
+                        clearInterval(id);
+                        i = 0;
+                    } else {
+                        width++;
+                        elem.style.width = width + "%";
+                        elem.innerHTML = swimProgress + "%" + "	🏊‍♂️🏊‍♂️🏊‍♂️";
+                    }
+                }
+            }
+        }
+
+        var j = 0;
+        function move_yearprogress() {
+            if (j == 0) {
+                j = 1;
+                var elem = document.getElementById("yearBar");
+                var width = 1;
+                var id = setInterval(frame, 45);
+                var yearPercentage = getPastDay()*((100/365)).toFixed(2);
+                function frame() {
+                    if (width >= yearPercentage) {
+                        clearInterval(id);
+                        j = 0;
+                    } else {
+                        width++;
+                        elem.style.width = width + "%";
+                        elem.innerHTML = yearPercentage + "%  " + " 📅 2022";
+                    }
+                }
+            }
+        }
+
+        function getPastDay(){
+            var now = new Date();
+            var start = new Date(now.getFullYear(), 0, 0);
+            var diff = now - start;
+            var oneDay = 1000 * 60 * 60 * 24;
+            var day = Math.floor(diff / oneDay);
+
+            return day;
+        }
+
+        document.getElementById("daysPast").innerHTML = getPastDay() + " Days Past";
+
+    </script>
+
+</body>
+
+</html>
