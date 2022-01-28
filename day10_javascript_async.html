@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>day10 javascript loop and async</title>
+    <script src="https://cdn.jsdelivr.net/npm/vue@2.6.14"></script>
+    <meta charset="utf-8" />
+    <style type="text/css">
+      .box {
+        height: 120px;
+        width: 120px;
+        text-align: center;
+        background-color: rgb(255, 255, 255);
+        margin-right: 3px;
+        margin-top: 3px;
+        display: inline-block;
+      }
+    </style>
+  </head>
+  <body>
+    <p><a href="index.html">Back</a></p>
+
+    <h1 id="demo"></h1>
+    <ol>
+      <div class="box" id="1"></div>
+      <div class="box" id="2"></div>
+
+      <div class="box" id="3"></div>
+      <div class="box" id="4"></div>
+
+      <div class="box" id="5"></div>
+      <div class="box" id="6"></div>
+    </ol>
+
+    <ol>
+      <div class="box" id="12"></div>
+      <div class="box" id="11"></div>
+
+      <div class="box" id="10"></div>
+      <div class="box" id="9"></div>
+
+      <div class="box" id="8"></div>
+      <div class="box" id="7"></div>
+    </ol>
+
+    <script>
+      setInterval(myFunction, 1000);
+
+      function myFunction() {
+        let d = new Date();
+        document.getElementById("demo").innerHTML =
+          "The time is " +
+          d.getHours() +
+          ":" +
+          d.getMinutes() +
+          ":" +
+          d.getSeconds();
+
+        const boxes = [
+          document.getElementById("1"),
+          document.getElementById("2"),
+          document.getElementById("3"),
+          document.getElementById("4"),
+          document.getElementById("5"),
+          document.getElementById("6"),
+          document.getElementById("7"),
+          document.getElementById("8"),
+          document.getElementById("9"),
+          document.getElementById("10"),
+          document.getElementById("11"),
+          document.getElementById("12"),
+        ];
+
+        boxes.forEach((element) => {
+          element.style.backgroundColor =
+            "rgb(" +
+            d.getHours() * 5 +
+            "," +
+            d.getMinutes() * 5 +
+            "," +
+            d.getSeconds() * 5 +
+            ")";
+
+
+          if (element.id < 7) {
+            element.style.height =
+              120 - d.getSeconds() * (element.id * 2) + "px";
+          } else if (element.id < 13) {
+            element.style.height =
+              120 - d.getSeconds() * ((element.id - 6) * 2) + "px";
+          }
+        });
+
+        //   document.getElementById("box").style.height =
+        //     120 - d.getSeconds() * 2 + "px";
+        //   document.getElementById("box").style.width =
+        //     120 - d.getSeconds() * 2 + "px";
+
+        //   document.getElementById("box2").style.height =
+        //      d.getSeconds() * 2 + "px";
+        //    document.getElementById("box2").style.width =
+        //      d.getSeconds() * 2 + "px";
+      }
+    </script>
+  </body>
+</html>
