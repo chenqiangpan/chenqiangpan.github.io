@@ -11,25 +11,7 @@
     />
 
     <style>
-      body {
-        font-family: "Montserrat", sans-serif;
-        font-weight: 400;
-        font-size: 1.3em;
-        color: #fff;
-        text-shadow: 0.1em 0.1em 0 rgba(0, 0, 0, 0.3);
-        height: 100vh;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        background-image: linear-gradient(
-          to right top,
-          #99bbcb,
-          #a5c7d7,
-          #b1d4e2,
-          #bde0ee,
-          #c9edfa
-        );
-      }
+
       button {
         position: relative;
         top: 0;
@@ -37,48 +19,11 @@
         font-weight: 400;
         font-size: 1.3em;
         color: rgb(111, 185, 255);
-        display: inline-block;
+        display: flex,inline-block;
         margin: 10px;
         border-style: none;
       
         
-      }
-      h1 {
-        margin: 0 auto;
-        font-size: 2.2em;
-        text-align: center;
-        color: #fff;
-        font-size: 5em;
-      }
-      body.sunny {
-        background-image: linear-gradient(
-          to right top,
-          #ff4e50,
-          #ff713e,
-          #ff932b,
-          #ffb41d,
-          #f9d423
-        );
-      }
-      body.cloudy {
-        background-image: linear-gradient(
-          to right top,
-          #63747c,
-          #71858e,
-          #7f96a0,
-          #8da8b2,
-          #9bbac5
-        );
-      }
-      body.rainy {
-        background-image: linear-gradient(
-          to right top,
-          #637c7b,
-          #718e8c,
-          #7ea09e,
-          #8db2b0,
-          #9bc5c3
-        );
       }
     </style>
   </head>
@@ -95,7 +40,7 @@
     <button onClick ="weatherBalloon(5128581)">New York</button>
     <button onClick ="weatherBalloon(1814906)">Chongqing</button>
 
-    <div id="weather">
+    <div style="margin-left: 30px;" id="weather">
       <h2 id="location"></h2>
       <h3 id="sealevel"></h3>
       <div id="description"></div>
@@ -131,14 +76,6 @@
 
             
 
-
-            if( description.indexOf('rain') > 0 ) {
-           	document.body.className = 'rainy';
-              } else if( description.indexOf('cloud') > 0 ) {
-                        	document.body.className = 'cloudy';
-             } else if( description.indexOf('sunny') > 0 ) {
-                        	document.body.className = 'sunny';
-            }
       }
 
       window.onload = function() {
