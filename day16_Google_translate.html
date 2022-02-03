@@ -1,7 +1,9 @@
 <!DOCTYPE html>
 <html lang="en-US">
 <body>
+  <p id = "textHere"></p>
 
+  
 <div id="google_translate_element"></div>
 
 <script type="text/javascript">
@@ -16,13 +18,19 @@ function googleTranslateElementInit() {
 
 <input type="text" id="textInput" name="textInput"></br>
 
-<p id = "textHere"></p>
+
+
+<button onclick="addText()">Translate</button>
 
 <script>
 
-let textInput = document.querySelector('input').value;
+function addText(){
+
+
+  let textInput = document.querySelector('input').value;
 
 document.getElementById('textHere').innerHTML = textInput;
+}
 
 
 </script>
