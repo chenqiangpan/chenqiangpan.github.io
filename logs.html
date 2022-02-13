@@ -210,6 +210,13 @@ Day23 (2022/02/012):
 </br> C# Event Action 
 </br> condition from actions 
 </br> interface implemented into multiple objects
+
+</br>
+</br>public interface IInteractable
+</br>  {
+</br>      void Interact();
+</br>      public event Action<string> Interacted;
+</br>  }
 </br>Inside player.cs:
 </br>        var interactable = nearestGameObject.GetComponent<IInteractable>();
 </br>          if (interactable != null)
@@ -221,7 +228,7 @@ Day23 (2022/02/012):
 </br> {
 </br>     ColorChange(); // let each interactable object deside what to do 
 </br>     
-</br>     Interacted?.Invoke();
+</br>     Interacted?.Invoke(string);
 </br> }
 
     
