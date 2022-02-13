@@ -182,19 +182,48 @@
 </br> follow  <a href="https://devcenter.heroku.com/articles/container-registry-and-runtime">heroku official tutorial</a> 
 </br> get my first Docker image deployed on heroku
 </br> happy 
-  
+
+</br>
+</br>
 Day21 (2022/02/08):
   
 </br> follow  <a href="https://docs.djangoproject.com/en/4.0/intro/tutorial01/">official Django tutorial</a> 
 </br> create a polls project
 </br> still have issue deploy it with heroku: collectestatic : no input error 
   
+
+</br></br>
+
 Day22 (2022/02/09):
   
 </br> tired of those heroku deploy issue
 </br> just create a random picture website with https://picsum.photos/
 </br> add a bit function to let user customize the picture size  
 </br> add another bit function to let user undo
+
+</br>
+
+</br>
+Day23 (2022/02/012):
+  
+</br> C# interface
+</br> C# Event Action 
+</br> condition from actions 
+</br> interface implemented into multiple objects
+</br>Inside player.cs:
+</br>        var interactable = nearestGameObject.GetComponent<IInteractable>();
+</br>          if (interactable != null)
+</br>           {
+</br>              interactable.Interact();
+</br>           }
+</br> Inside Cube.cs:
+</br> public void Interact()
+</br> {
+</br>     ColorChange(); // let each interactable object deside what to do 
+</br>     
+</br>     Interacted?.Invoke();
+</br> }
+
     
   </body>
 </html>
