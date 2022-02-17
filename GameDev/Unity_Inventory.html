@@ -9,7 +9,7 @@
 
     <div>
 
-        <h3>Progress 1</h3>
+        <h3>2022/2/16 Progress 1</h3>
 
         <ol>
             <br>create scriptable objects and inventory system
@@ -37,6 +37,37 @@
           </video>
     </div>
 
+
+    <div>
+
+      <h3>2022/2/17 Progress 2</h3>
+
+      <ol>
+          <br>add save and load system
+          <br> using JsonUtility.ToJson(this,true) to save the inventory into Json
+          <br> then make it Binary and Serialize it, and then save to file:
+          <br>
+          <blockquote>
+            <br>BinaryFormatter bf = new BinaryFormatter();
+            <br>FileStream file = File.Create(string.Concat(Application.persistentDataPath, savePath));
+            <br>bf.Serialize(file, saveData);
+          </blockquote> 
+
+          <br> then, when load it, we do the reverse thing to Deserialize it:
+          <blockquote>
+            <br> BinaryFormatter bf = new BinaryFormatter();
+
+            <br>FileStream file = File.Open(string.Concat(Application.persistentDataPath, savePath), FileMode.Open);
+
+            <br> JsonUtility.FromJsonOverwrite(bf.Deserialize(file).ToString(), this);
+          </blockquote> 
+
+        </ol>
+
+      <video width="640" height="480" controls>
+          <source src="../videos/Unity/Unity_Inventory_2.mp4" type="video/mp4">
+        </video>
+  </div>
 
 </body>
 </html>
