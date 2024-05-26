@@ -7,25 +7,39 @@
     <style>
         body {
             display: flex;
-            flex-direction: column;
+            flex-direction: row;
             align-items: center;
             justify-content: center;
             height: 100vh;
             margin: 0;
             background-color: #f0f0f0;
         }
-        canvas {
+        #sidePanel {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-right: 20px;
+        }
+        #turnIndicatorCanvas {
+            margin-bottom: 20px;
             border: 1px solid #000;
         }
-        #turnIndicator {
-            margin-top: 20px;
-            font-size: 20px;
+        #undoButton {
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        #goBoard {
+            border: 1px solid #000;
         }
     </style>
 </head>
 <body>
+    <div id="sidePanel">
+        <canvas id="turnIndicatorCanvas" width="60" height="60"></canvas>
+        <button id="undoButton">Undo</button>
+    </div>
     <canvas id="goBoard" width="760" height="760"></canvas>
-    <div id="turnIndicator">Black's turn</div>
     <script src="main.js"></script>
 </body>
 </html>
