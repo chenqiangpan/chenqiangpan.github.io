@@ -1,13 +1,12 @@
 let ctx;
 let stones;
-const history = [];
+let history = [];
 const koHistory = []; // Track board states where captures occurred
 let lastCapturePosition = null; // Track the last capture position to enforce Ko rule
 
 let lastMove = null; // Track the last move
 let currentStoneColor = 'black'; // First stone color
-const boardSize = 19; // Define boardSize globally
-
+let boardSize = 19; // Define boardSize globally
 
 // Load the wood texture image
 const woodTexture = new Image();
@@ -76,6 +75,70 @@ class Stone {
     }
 }
 
+function chooseBoardSize(size) {
+    boardSize = size;
+    document.getElementById('boardSizeSelection').style.display = 'none';
+    document.getElementById('sidePanel').style.display = 'flex';
+    document.getElementById('goBoard').style.display = 'block';
+
+    initGame();
+}
+
+function initGame() {
+    const canvas = document.getElementById('goBoard');
+    ctx = canvas.getContext('2d');
+    const maxCanvasSize = Math.min(window.innerWidth, window.innerHeight) * 0.8;
+    const cellSize = maxCanvasSize / (boardSize + 1);
+    const offset = cellSize;
+
+    canvas.width = cellSize * (boardSize + 1);
+    canvas.height = cellSize * (boardSize + 1);
+
+    // Initialize the stones array
+    stones = Array.from({ length: boardSize }, () => Array(boardSize).fill(null));
+
+    // Draw the board only after the wood texture has loaded
+    woodTexture.onload = function() {
+        drawBoard();
+    };
+
+    // Redraw the board to ensure it is displayed correctly initially
+    drawBoard();
+
+    // Initialize turn indicator
+    updateTurnIndicator(currentStoneColor);
+
+    canvas.addEventListener('click', function(event) {
+        const rect = canvas.getBoundingClientRect();
+        const x = event.clientX - rect.left;
+        const y = event.clientY - rect.top;
+
+        // Find the nearest cross point
+        const i = Math.round((x - offset) / cellSize);
+        const j = Math.round((y - offset) / cellSize);
+
+        const xPos = offset + i * cellSize;
+        const yPos = offset + j * cellSize;
+
+        console.log(`Click detected at (${x}, ${y}), nearest grid point is (${i}, ${j})`);
+
+        handleBoardClick(i, j, cellSize);
+    });
+
+    // Add event listener for undo action
+    document.addEventListener('keydown', function(event) {
+        if (event.key === 'z' || event.key === 'Z') {
+            undoLastMove();
+        }
+    });
+
+    // Add event listener for undo button
+    const undoButton = document.getElementById('undoButton');
+    undoButton.addEventListener('click', function() {
+        undoLastMove();
+    });
+}
+
 function findGroup(stone, stones, visited) {
     const directions = [
         [0, 1],   // right
@@ -107,7 +170,7 @@ function findGroup(stone, stones, visited) {
     return group;
 }
 
-function calculateGroupQi(group) {
+function calculateGroupQi(group, stones) {
     const uniqueLiberties = new Set();
 
     for (const stone of group) {
@@ -121,8 +184,8 @@ function calculateGroupQi(group) {
         for (let [dx, dy] of directions) {
             const neighborX = stone.xIndex + dx;
             const neighborY = stone.yIndex + dy;
-            if (neighborX >= 0 && neighborY >= 0 && neighborX < stone.boardSize && neighborY < stone.boardSize) {
-                if (!stone.stones[neighborX][neighborY]) {
+            if (neighborX >= 0 && neighborY >= 0 && neighborX < stones.length && neighborY < stones.length) {
+                if (!stones[neighborX][neighborY]) {
                     uniqueLiberties.add(`${neighborX},${neighborY}`);
                 }
             }
@@ -138,7 +201,7 @@ function updateQiForAllGroups(stones, boardSize) {
         for (let y = 0; y < boardSize; y++) {
             if (stones[x][y] && !visited[x][y]) {
                 const group = findGroup(stones[x][y], stones, visited);
-                const totalQi = calculateGroupQi(group);
+                const totalQi = calculateGroupQi(group, stones);
                 for (const s of group) {
                     s.qi = totalQi;
                 }
@@ -146,6 +209,7 @@ function updateQiForAllGroups(stones, boardSize) {
         }
     }
 }
+
 
 function updateTurnIndicator(turnColor) {
     const turnCanvas = document.getElementById('turnIndicatorCanvas');
@@ -186,26 +250,29 @@ function drawBoard() {
     // Draw the wood texture as the background
     ctx.drawImage(woodTexture, 0, 0, ctx.canvas.width, ctx.canvas.height);
 
+    const cellSize = ctx.canvas.width / (boardSize + 1);
+    const offset = cellSize;
+
     // Redraw the board grid
     ctx.strokeStyle = '#000000';
-    for (let i = 0; i < stones.length; i++) {
+    for (let i = 0; i < boardSize; i++) {
         // Draw vertical lines
         ctx.beginPath();
-        ctx.moveTo(20 + i * 40, 20); // Adjust the offset and cellSize as needed
-        ctx.lineTo(20 + i * 40, 20 + (stones.length - 1) * 40);
+        ctx.moveTo(offset + i * cellSize, offset);
+        ctx.lineTo(offset + i * cellSize, offset + (boardSize - 1) * cellSize);
         ctx.stroke();
 
         // Draw horizontal lines
         ctx.beginPath();
-        ctx.moveTo(20, 20 + i * 40);
-        ctx.lineTo(20 + (stones.length - 1) * 40, 20 + i * 40);
+        ctx.moveTo(offset, offset + i * cellSize);
+        ctx.lineTo(offset + (boardSize - 1) * cellSize, offset + i * cellSize);
         ctx.stroke();
     }
 
     for (let row of stones) {
         for (let s of row) {
             if (s) {
-                s.draw(ctx, 20); // Adjust the offset as needed
+                s.draw(ctx, offset); // Adjust the offset as needed
             }
         }
     }
@@ -331,12 +398,17 @@ function preemptiveKoCheck(stones, capturedStones, color) {
 function undoLastMove() {
     if (history.length > 0) {
         // Remove the last state from history
-        history.pop();
-        
+        const previousState = history.pop();
+
+        // Remove the last Ko history entry if there was a capture
+        if (koHistory.length > 0) {
+            koHistory.pop();
+        }
+
         if (history.length > 0) {
-            const previousState = history[history.length - 1];
-            console.log('Undoing to previous state:', previousState);
-            deserializeBoard(previousState, stones, 40, boardSize); // Use global boardSize
+            const lastState = history[history.length - 1];
+            console.log('Undoing to previous state:', lastState);
+            deserializeBoard(lastState, stones, ctx.canvas.width / (boardSize + 1), boardSize); // Use calculated cellSize
             drawBoard();
             currentStoneColor = currentStoneColor === 'black' ? 'white' : 'black';
             updateTurnIndicator(currentStoneColor);
@@ -350,21 +422,47 @@ function undoLastMove() {
     }
 }
 
+
+
 function handleBoardClick(i, j, cellSize) {
-    if (!stones[i][j]) {
+    if (i >= 0 && i < boardSize && j >= 0 && j < boardSize && !stones[i][j]) { // Added bounds check
         console.log('Position is valid and empty, checking Ko situation');
 
-        // Check if the move is an immediate recapture in the Ko position
-        if (lastCapturePosition && lastCapturePosition.x === i && lastCapturePosition.y === j) {
-            console.log('Immediate recapture in Ko position detected, move not allowed');
-            alert('Ko rule violation: move not allowed');
-            return;
+        // Place the stone temporarily to calculate qi
+        const tempStonesBefore = deepCopyStones(stones);
+        const newStone = new Stone(i, j, currentStoneColor, cellSize, boardSize, tempStonesBefore);
+        tempStonesBefore[i][j] = newStone;
+        updateQiForAllGroups(tempStonesBefore, boardSize);
+        
+        // Check if the new stone has zero qi and is not connected to any group with qi
+        if (newStone.calculateQi() === 0) {
+            const visited = Array.from({ length: boardSize }, () => Array(boardSize).fill(false));
+            const group = findGroup(newStone, tempStonesBefore, visited);
+            const totalQi = calculateGroupQi(group, tempStonesBefore);
+
+            if (totalQi === 0) {
+                // Check if placing the stone would result in capturing any enemy stones
+                let capturedStones = [];
+                for (let x = 0; x < boardSize; x++) {
+                    for (let y = 0; y < boardSize; y++) {
+                        if (tempStonesBefore[x][y] && tempStonesBefore[x][y].qi <= 0 && tempStonesBefore[x][y].color !== currentStoneColor) {
+                            capturedStones.push({ x, y });
+                        }
+                    }
+                }
+
+                // If no stones are captured, the move is invalid
+                if (capturedStones.length === 0) {
+                    console.log('Move not allowed: Stone would have zero qi');
+                    alert('Invalid move: Stone would have zero qi');
+                    return;
+                }
+            }
         }
 
         // Check for Ko situation before placing the stone
-        const tempStonesBefore = deepCopyStones(stones);
-        if (checkKoSituation(tempStonesBefore, i, j, currentStoneColor)) {
-            console.log('Ko situation detected before placing the stone, move not allowed');
+        if (lastCapturePosition && lastCapturePosition.length === 1 && lastCapturePosition[0].x === i && lastCapturePosition[0].y === j) {
+            console.log('Immediate recapture in Ko position detected, move not allowed');
             alert('Ko rule violation: move not allowed');
             return;
         }
@@ -372,7 +470,6 @@ function handleBoardClick(i, j, cellSize) {
         console.log('Position is valid and empty, placing stone');
 
         // Place the stone
-        const newStone = new Stone(i, j, currentStoneColor, cellSize, boardSize, stones);
         stones[i][j] = newStone;
 
         // Recalculate qi for all groups
@@ -416,7 +513,7 @@ function handleBoardClick(i, j, cellSize) {
         }
 
         // Track the position of the last capture
-        lastCapturePosition = capturedStones.length > 0 ? { x: capturedStones[0].x, y: capturedStones[0].y } : null;
+        lastCapturePosition = capturedStones.length === 1 ? capturedStones : null;
 
         // Track the new state in the Ko history if captures occurred
         if (capturedStones.length > 0) {
@@ -445,53 +542,9 @@ function handleBoardClick(i, j, cellSize) {
     }
 }
 
+
+
+
 window.onload = function() {
-    const canvas = document.getElementById('goBoard');
-    ctx = canvas.getContext('2d');
-    const cellSize = 40;
-    const offset = 20;
-
-    // Initialize the stones array
-    stones = Array.from({ length: boardSize }, () => Array(boardSize).fill(null));
-
-    // Draw the board only after the wood texture has loaded
-    woodTexture.onload = function() {
-        drawBoard();
-    };
-
-    // Redraw the board to ensure it is displayed correctly initially
-    drawBoard();
-
-    // Initialize turn indicator
-    updateTurnIndicator(currentStoneColor);
-
-    canvas.addEventListener('click', function(event) {
-        const rect = canvas.getBoundingClientRect();
-        const x = event.clientX - rect.left;
-        const y = event.clientY - rect.top;
-    
-        // Find the nearest cross point
-        const i = Math.round((x - offset) / cellSize);
-        const j = Math.round((y - offset) / cellSize);
-    
-        const xPos = offset + i * cellSize;
-        const yPos = offset + j * cellSize;
-    
-        console.log(`Click detected at (${x}, ${y}), nearest grid point is (${i}, ${j})`);
-    
-        handleBoardClick(i, j, cellSize);
-    });
-
-    // Add event listener for undo action
-    document.addEventListener('keydown', function(event) {
-        if (event.key === 'z' || event.key === 'Z') {
-            undoLastMove();
-        }
-    });
-
-    // Add event listener for undo button
-    const undoButton = document.getElementById('undoButton');
-    undoButton.addEventListener('click', function() {
-        undoLastMove();
-    });
-}
+    // No initial setup needed as it is handled by chooseBoardSize function
+};
