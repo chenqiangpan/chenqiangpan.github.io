@@ -1,9 +1,13 @@
 let ctx;
 let stones;
 const history = [];
-let lastCapturedPosition = null;
+const koHistory = []; // Track board states where captures occurred
+let lastCapturePosition = null; // Track the last capture position to enforce Ko rule
+
 let lastMove = null; // Track the last move
 let currentStoneColor = 'black'; // First stone color
+const boardSize = 19; // Define boardSize globally
+
 
 // Load the wood texture image
 const woodTexture = new Image();
@@ -117,7 +121,7 @@ function calculateGroupQi(group) {
         for (let [dx, dy] of directions) {
             const neighborX = stone.xIndex + dx;
             const neighborY = stone.yIndex + dy;
-            if (neighborX >= 0 && neighborX < stone.boardSize && neighborY >= 0 && neighborY < stone.boardSize) {
+            if (neighborX >= 0 && neighborY >= 0 && neighborX < stone.boardSize && neighborY < stone.boardSize) {
                 if (!stone.stones[neighborX][neighborY]) {
                     uniqueLiberties.add(`${neighborX},${neighborY}`);
                 }
@@ -176,43 +180,6 @@ function updateTurnIndicator(turnColor) {
     ctx.fillText('Turn', x, y + radius + 5);
 }
 
-
-function serializeBoard(stones) {
-    const serializedRows = stones.map(row =>
-        row.map(stone => (stone ? stone.color.charAt(0) : '0')).join('')
-    );
-    return serializedRows.join('/');
-}
-
-function deserializeBoard(serializedBoard, stones, cellSize, boardSize) {
-    const rows = serializedBoard.split('/');
-    for (let i = 0; i < boardSize; i++) {
-        for (let j = 0; j < boardSize; j++) {
-            const char = rows[i][j];
-            if (char === '0') {
-                stones[i][j] = null;
-            } else {
-                const color = char === 'b' ? 'black' : 'white';
-                stones[i][j] = new Stone(i, j, color, cellSize, boardSize, stones);
-            }
-        }
-    }
-    updateQiForAllGroups(stones, boardSize);
-}
-
-function undoLastMove() {
-    if (history.length > 0) {
-        const previousState = history.pop();
-        console.log('Undoing to previous state:', previousState);
-        deserializeBoard(previousState, stones, 40, 19); // Adjust the cellSize and boardSize as needed
-        lastCapturedPosition = null;
-        lastMove = null;
-        drawBoard();
-        currentStoneColor = currentStoneColor === 'black' ? 'white' : 'black';
-        updateTurnIndicator(currentStoneColor);
-    }
-}
-
 function drawBoard() {
     ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
 
@@ -244,10 +211,243 @@ function drawBoard() {
     }
 }
 
+function deepCopyStones(stones) {
+    const copy = Array.from({ length: stones.length }, () => Array(stones[0].length).fill(null));
+    for (let i = 0; i < stones.length; i++) {
+        for (let j = 0; j < stones[i].length; j++) {
+            if (stones[i][j]) {
+                copy[i][j] = new Stone(
+                    stones[i][j].xIndex,
+                    stones[i][j].yIndex,
+                    stones[i][j].color,
+                    stones[i][j].cellSize,
+                    stones[i][j].boardSize,
+                    copy // Use the copy array here to avoid circular reference
+                );
+            }
+        }
+    }
+    return copy;
+}
+
+function serializeBoard(stones) {
+    const serializedRows = stones.map(row =>
+        row.map(stone => (stone ? stone.color.charAt(0) : '0')).join('')
+    );
+    const serializedBoard = serializedRows.join('/');
+    console.log('Serialized Board:', serializedBoard);
+    return serializedBoard;
+}
+
+function deserializeBoard(serializedBoard, stones, cellSize, boardSize) {
+    const rows = serializedBoard.split('/');
+    for (let i = 0; i < boardSize; i++) {
+        for (let j = 0; j < boardSize; j++) {
+            const char = rows[i][j];
+            if (char === '0') {
+                stones[i][j] = null;
+            } else {
+                const color = char === 'b' ? 'black' : 'white';
+                stones[i][j] = new Stone(i, j, color, cellSize, boardSize, stones);
+            }
+        }
+    }
+    updateQiForAllGroups(stones, boardSize);
+    console.log('Deserialized Board:', serializeBoard(stones)); // Log the deserialized state
+}
+
+function checkKoSituation(tempStones, i, j, color) {
+    const tempStone = new Stone(i, j, color, 40, boardSize, tempStones);
+    tempStones[i][j] = tempStone;
+
+    // Recalculate qi for all groups
+    updateQiForAllGroups(tempStones, boardSize);
+
+    // Serialize the board state
+    const serializedState = serializeBoard(tempStones);
+    const isKo = koHistory.includes(serializedState);
+
+    // Remove the temporary stone
+    tempStones[i][j] = null;
+
+    console.log('Checking Ko Situation: ', serializedState, 'isKo:', isKo); // Log the check
+    return isKo;
+}
+
+function isKoSituation(newSerializedState) {
+    if (history.length === 0) return false;
+    const lastSerializedState = history[history.length - 1];
+
+    console.log('Comparing states for Ko:');
+    console.log('New State:', newSerializedState);
+    console.log('Last State:', lastSerializedState);
+
+    const isKo = newSerializedState === lastSerializedState;
+
+    // Log lengths of the serialized strings
+    console.log('New State Length:', newSerializedState.length);
+    console.log('Last State Length:', lastSerializedState.length);
+
+    // Perform character-by-character comparison if lengths are the same but isKo is false
+    if (!isKo && newSerializedState.length === lastSerializedState.length) {
+        for (let i = 0; i < newSerializedState.length; i++) {
+            if (newSerializedState[i] !== lastSerializedState[i]) {
+                console.log(`Mismatch at index ${i}: '${newSerializedState[i]}' !== '${lastSerializedState[i]}'`);
+                break;
+            }
+        }
+    }
+
+    console.log('Ko comparison result:', isKo);
+    return isKo;
+}
+
+function preemptiveKoCheck(stones, capturedStones, color) {
+    const opponentColor = color === 'black' ? 'white' : 'black';
+    const tempStones = deepCopyStones(stones);
+
+    for (const pos of capturedStones) {
+        if (stones[pos.x][pos.y] === null) continue; // Skip null stones
+
+        tempStones[pos.x][pos.y] = new Stone(
+            pos.x, pos.y, opponentColor,
+            stones[pos.x][pos.y] ? stones[pos.x][pos.y].cellSize : 40, // Default cell size if null
+            stones[pos.x][pos.y] ? stones[pos.x][pos.y].boardSize : 19, // Default board size if null
+            tempStones
+        );
+        updateQiForAllGroups(tempStones, tempStones.length);
+        const serializedState = serializeBoard(tempStones);
+        if (koHistory.includes(serializedState)) {
+            console.log('Preemptive Ko Check: ', serializedState, 'willCreateKo:', true);
+            return true;
+        }
+        tempStones[pos.x][pos.y] = null;
+    }
+
+    console.log('Preemptive Ko Check: No Ko detected');
+    return false;
+}
+
+function undoLastMove() {
+    if (history.length > 0) {
+        // Remove the last state from history
+        history.pop();
+        
+        if (history.length > 0) {
+            const previousState = history[history.length - 1];
+            console.log('Undoing to previous state:', previousState);
+            deserializeBoard(previousState, stones, 40, boardSize); // Use global boardSize
+            drawBoard();
+            currentStoneColor = currentStoneColor === 'black' ? 'white' : 'black';
+            updateTurnIndicator(currentStoneColor);
+        } else {
+            // If history is empty, reset the board
+            stones = Array.from({ length: boardSize }, () => Array(boardSize).fill(null));
+            drawBoard();
+            currentStoneColor = 'black';
+            updateTurnIndicator(currentStoneColor);
+        }
+    }
+}
+
+function handleBoardClick(i, j, cellSize) {
+    if (!stones[i][j]) {
+        console.log('Position is valid and empty, checking Ko situation');
+
+        // Check if the move is an immediate recapture in the Ko position
+        if (lastCapturePosition && lastCapturePosition.x === i && lastCapturePosition.y === j) {
+            console.log('Immediate recapture in Ko position detected, move not allowed');
+            alert('Ko rule violation: move not allowed');
+            return;
+        }
+
+        // Check for Ko situation before placing the stone
+        const tempStonesBefore = deepCopyStones(stones);
+        if (checkKoSituation(tempStonesBefore, i, j, currentStoneColor)) {
+            console.log('Ko situation detected before placing the stone, move not allowed');
+            alert('Ko rule violation: move not allowed');
+            return;
+        }
+
+        console.log('Position is valid and empty, placing stone');
+
+        // Place the stone
+        const newStone = new Stone(i, j, currentStoneColor, cellSize, boardSize, stones);
+        stones[i][j] = newStone;
+
+        // Recalculate qi for all groups
+        updateQiForAllGroups(stones, boardSize);
+
+        // Check if placing the stone would result in capturing any enemy stones
+        let capturedStones = [];
+        for (let x = 0; x < boardSize; x++) {
+            for (let y = 0; y < boardSize; y++) {
+                if (stones[x][y] && stones[x][y].qi <= 0 && stones[x][y].color !== currentStoneColor) {
+                    capturedStones.push({ x, y });
+                }
+            }
+        }
+
+        console.log('Captured stones:', capturedStones);
+
+        // Remove captured stones
+        capturedStones.forEach(pos => {
+            stones[pos.x][pos.y] = null;
+        });
+
+        // Recalculate qi after potential captures
+        updateQiForAllGroups(stones, boardSize);
+
+        // Serialize the board state after captures
+        const postCaptureSerializedState = serializeBoard(stones);
+
+        // Check for Ko situation after captures
+        if (koHistory.includes(postCaptureSerializedState) || isKoSituation(postCaptureSerializedState)) {
+            console.log('Ko situation detected after capture, move not allowed');
+            // Restore the board state before the move and show a warning
+            stones[i][j] = null;
+            capturedStones.forEach(pos => {
+                stones[pos.x][pos.y] = new Stone(pos.x, pos.y, currentStoneColor === 'black' ? 'white' : 'black', cellSize, boardSize, stones);
+            });
+            updateQiForAllGroups(stones, boardSize);
+            drawBoard();
+            alert('Ko rule violation: move not allowed');
+            return;
+        }
+
+        // Track the position of the last capture
+        lastCapturePosition = capturedStones.length > 0 ? { x: capturedStones[0].x, y: capturedStones[0].y } : null;
+
+        // Track the new state in the Ko history if captures occurred
+        if (capturedStones.length > 0) {
+            koHistory.push(postCaptureSerializedState);
+            console.log('Ko history updated:', koHistory); // Log the updated koHistory
+        }
+
+        console.log('Move is valid, finalizing placement');
+
+        // Save the current board state to history after finalizing the move
+        history.push(postCaptureSerializedState);
+
+        // Finalize the placement and update the last move
+        lastMove = { i, j, color: currentStoneColor };
+
+        // Redraw the board and all stones
+        drawBoard();
+
+        // Alternate stone color
+        currentStoneColor = currentStoneColor === 'black' ? 'white' : 'black';
+
+        // Update turn indicator
+        updateTurnIndicator(currentStoneColor);
+    } else {
+        console.log('Invalid move: either out of bounds or position already occupied');
+    }
+}
+
 window.onload = function() {
     const canvas = document.getElementById('goBoard');
     ctx = canvas.getContext('2d');
-    const boardSize = 19;
     const cellSize = 40;
     const offset = 20;
 
@@ -265,92 +465,21 @@ window.onload = function() {
     // Initialize turn indicator
     updateTurnIndicator(currentStoneColor);
 
-    // Event listener for mouse click
     canvas.addEventListener('click', function(event) {
         const rect = canvas.getBoundingClientRect();
         const x = event.clientX - rect.left;
         const y = event.clientY - rect.top;
-
+    
         // Find the nearest cross point
         const i = Math.round((x - offset) / cellSize);
         const j = Math.round((y - offset) / cellSize);
-
+    
         const xPos = offset + i * cellSize;
         const yPos = offset + j * cellSize;
-
+    
         console.log(`Click detected at (${x}, ${y}), nearest grid point is (${i}, ${j})`);
-
-        // Check if the click is close enough to a cross point and the position is empty
-        if (Math.abs(x - xPos) < cellSize / 2 && Math.abs(y - yPos) < cellSize / 2 && !stones[i][j]) {
-            console.log('Position is valid and empty, placing stone');
-
-            // Save the current board state to history
-            const serializedState = serializeBoard(stones);
-            console.log('Serialized State:', serializedState);
-            history.push(serializedState);
-
-            // Temporarily place the stone
-            const tempStone = new Stone(i, j, currentStoneColor, cellSize, boardSize, stones);
-            stones[i][j] = tempStone;
-
-            console.log('Temporary stone placed, recalculating qi for all groups');
-
-            // Recalculate qi for all groups
-            updateQiForAllGroups(stones, boardSize);
-
-            // Check if placing the stone would result in capturing any enemy stones
-            let capturedStones = [];
-            for (let x = 0; x < boardSize; x++) {
-                for (let y = 0; y < boardSize; y++) {
-                    if (stones[x][y] && stones[x][y].qi <= 0 && stones[x][y].color !== currentStoneColor) {
-                        capturedStones.push({ x, y });
-                    }
-                }
-            }
-
-            console.log('Captured stones:', capturedStones);
-
-            // Remove captured stones
-            capturedStones.forEach(pos => {
-                stones[pos.x][pos.y] = null;
-            });
-
-            // Recalculate qi after potential captures
-            updateQiForAllGroups(stones, boardSize);
-
-            // Check the qi of the temporary stone after potential captures
-            if (tempStone.qi <= 0 && capturedStones.length === 0) {
-                console.log('Move is not allowed, removing temporary stone');
-                // Remove the temporary stone and show a warning
-                stones[i][j] = null;
-                alert('Not allowed');
-                history.pop(); // Remove the last saved state if the move was invalid
-                return;
-            }
-
-            console.log('Move is valid, finalizing placement');
-
-            // Update the last captured position if there were captures
-            if (capturedStones.length > 0) {
-                lastCapturedPosition = { i, j };
-            } else {
-                lastCapturedPosition = null;
-            }
-
-            // Finalize the placement and update the last move
-            lastMove = { i, j, color: currentStoneColor };
-
-            // Redraw the board and all stones
-            drawBoard();
-
-            // Alternate stone color
-            currentStoneColor = currentStoneColor === 'black' ? 'white' : 'black';
-
-            // Update turn indicator
-            updateTurnIndicator(currentStoneColor);
-        } else {
-            console.log('Invalid move: either out of bounds or position already occupied');
-        }
+    
+        handleBoardClick(i, j, cellSize);
     });
 
     // Add event listener for undo action
