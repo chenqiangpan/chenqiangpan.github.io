@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -12,56 +13,68 @@
             justify-content: center;
             height: 100vh;
             margin: 0;
-            background-color: #f0f0f0;
         }
-        #boardSizeSelection {
-            margin-bottom: 20px;
-            text-align: center;
+
+        .centered-buttons {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
         }
+
+        .large-button {
+            font-size: 1.5em;
+            padding: 20px;
+            margin: 10px;
+        }
+
+        .board-size-buttons {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
         .boardSizeButton {
             margin: 5px;
-            padding: 10px 20px;
-            font-size: 16px;
-            cursor: pointer;
+            padding: 10px;
+            font-size: 1em;
         }
+
+        .centered-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 80vh;
+        }
+
+        .canvas-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: auto;
+        }
+
+        .side-panel-container {
+            display: flex;
+            align-items: flex-start;
+        }
+
         #sidePanel {
             display: flex;
-            flex-direction: row;
+            flex-direction: column;
             align-items: center;
-            margin-bottom: 20px;
-        }
-        #turnIndicatorCanvas {
             margin-right: 20px;
-            border: 1px solid #000;
-        }
-        #undoButton {
-            padding: 10px 20px;
-            font-size: 16px;
-            cursor: pointer;
-        }
-        #goBoard {
-            border: 1px solid #000;
-            max-width: 100%;
-            height: auto;
-        }
-        @media (min-width: 600px) {
-            body {
-                flex-direction: row;
-            }
-            #sidePanel {
-                flex-direction: column;
-                margin-right: 20px;
-                margin-bottom: 0;
-            }
-            #turnIndicatorCanvas {
-                margin-bottom: 20px;
-                margin-right: 0;
-            }
+            /* Adjust margin as needed */
         }
     </style>
 </head>
+
 <body>
-    <div id="boardSizeSelection">
+    <div id="aiSelection" class="centered-buttons">
+        <button class="large-button" onclick="startGameWithAI('dumb')">Dumber AI</button>
+        <button class="large-button" onclick="startGameWithAI('smart')">Dumb AI</button>
+    </div>
+    <div id="boardSizeSelection" class="board-size-buttons" style="display:none;">
         <h2>Choose a Board Size</h2>
         <button class="boardSizeButton" onclick="chooseBoardSize(5)">5x5</button>
         <button class="boardSizeButton" onclick="chooseBoardSize(6)">6x6</button>
@@ -73,11 +86,17 @@
         <button class="boardSizeButton" onclick="chooseBoardSize(15)">15x15</button>
         <button class="boardSizeButton" onclick="chooseBoardSize(19)">19x19</button>
     </div>
-    <div id="sidePanel" style="display:none;">
-        <canvas id="turnIndicatorCanvas" width="60" height="60"></canvas>
-        <button id="undoButton">Undo [Z]</button>
+    <div class="side-panel-container" style="display:none;" id="gameContainer">
+        <div id="sidePanel">
+            <canvas id="turnIndicatorCanvas" width="60" height="60"></canvas>
+            <button id="undoButton">Undo [Z]</button>
+            <div id="aiLevelDisplay">AI Level: </div>
+        </div>
+        <div class="centered-container" id="canvasContainer">
+            <canvas id="goBoard"></canvas>
+        </div>
     </div>
-    <canvas id="goBoard" style="display:none;"></canvas>
-    <script src="main.js"></script>
+    <script src="main.js" type="module"></script>
 </body>
+
 </html>

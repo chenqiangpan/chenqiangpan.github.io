@@ -1,9 +1,12 @@
+import { getRandomMove, getBestMove,iterativeDeepening } from './ai.js'; // Update import
+
+
 let ctx;
 let stones;
 let history = [];
 const koHistory = []; // Track board states where captures occurred
 let lastCapturePosition = null; // Track the last capture position to enforce Ko rule
-
+let aiLevel = ''; // Track the AI level chosen by the player
 let lastMove = null; // Track the last move
 let currentStoneColor = 'black'; // First stone color
 let boardSize = 19; // Define boardSize globally
@@ -11,6 +14,8 @@ let boardSize = 19; // Define boardSize globally
 // Load the wood texture image
 const woodTexture = new Image();
 woodTexture.src = 'wood_texture.jpg';
+
+let latestStone = null; // Track the latest stone
 
 class Stone {
     constructor(xIndex, yIndex, color, cellSize, boardSize, stones) {
@@ -67,22 +72,26 @@ class Stone {
         ctx.stroke();
 
         // Draw the number of qi on top of the stone
-        ctx.fillStyle = this.color === 'black' ? 'white' : 'black';
-        ctx.font = `${fontSize}px Arial`;
+        ctx.fillStyle = (this === latestStone) ? 'red' : (this.color === 'black' ? 'white' : 'black');
+        ctx.font = `bold ${fontSize}px Arial`;
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         ctx.fillText(this.qi, x, y);
     }
 }
 
+
 function chooseBoardSize(size) {
     boardSize = size;
     document.getElementById('boardSizeSelection').style.display = 'none';
     document.getElementById('sidePanel').style.display = 'flex';
+    document.getElementById('gameContainer').style.display = 'flex'; // Show the game container
     document.getElementById('goBoard').style.display = 'block';
 
     initGame();
 }
+window.chooseBoardSize = chooseBoardSize;
+
 
 function initGame() {
     const canvas = document.getElementById('goBoard');
@@ -96,6 +105,9 @@ function initGame() {
 
     // Initialize the stones array
     stones = Array.from({ length: boardSize }, () => Array(boardSize).fill(null));
+    history = []; // Reset the history for the new game
+    koHistory.length = 0; // Clear the Ko history
+    lastCapturePosition = null; // Reset last capture position
 
     // Draw the board only after the wood texture has loaded
     woodTexture.onload = function() {
@@ -117,9 +129,6 @@ function initGame() {
         const i = Math.round((x - offset) / cellSize);
         const j = Math.round((y - offset) / cellSize);
 
-        const xPos = offset + i * cellSize;
-        const yPos = offset + j * cellSize;
-
         console.log(`Click detected at (${x}, ${y}), nearest grid point is (${i}, ${j})`);
 
         handleBoardClick(i, j, cellSize);
@@ -138,6 +147,7 @@ function initGame() {
         undoLastMove();
     });
 }
+
 
 function findGroup(stone, stones, visited) {
     const directions = [
@@ -269,6 +279,27 @@ function drawBoard() {
         ctx.stroke();
     }
 
+    // Draw indices
+    ctx.fillStyle = 'black';
+    ctx.font = `bold ${cellSize / 3}px Arial`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+
+    const indexOffset = cellSize / 1.5; // Adjust this value to move indices further from the grids
+
+    for (let i = 0; i < boardSize; i++) {
+        const letter = String.fromCharCode(65 + i); // A, B, C, ..., J (or up to the board size)
+        const number = (boardSize - i).toString(); // boardSize, boardSize-1, ..., 1
+
+        // Draw horizontal indices (letters) at the top and bottom
+        ctx.fillText(letter, offset + i * cellSize, offset - indexOffset); // Top
+        ctx.fillText(letter, offset + i * cellSize, offset + (boardSize - 1) * cellSize + indexOffset); // Bottom
+
+        // Draw vertical indices (numbers) at the left and right
+        ctx.fillText(number, offset - indexOffset, offset + i * cellSize); // Left
+        ctx.fillText(number, offset + (boardSize - 1) * cellSize + indexOffset, offset + i * cellSize); // Right
+    }
+
     for (let row of stones) {
         for (let s of row) {
             if (s) {
@@ -277,6 +308,8 @@ function drawBoard() {
         }
     }
 }
+
+
 
 function deepCopyStones(stones) {
     const copy = Array.from({ length: stones.length }, () => Array(stones[0].length).fill(null));
@@ -341,6 +374,8 @@ function checkKoSituation(tempStones, i, j, color) {
     return isKo;
 }
 
+window.checkKoSituation = checkKoSituation;
+
 function isKoSituation(newSerializedState) {
     if (history.length === 0) return false;
     const lastSerializedState = history[history.length - 1];
@@ -395,6 +430,10 @@ function preemptiveKoCheck(stones, capturedStones, color) {
     return false;
 }
 
+
+window.preemptiveKoCheck = preemptiveKoCheck;
+
+
 function undoLastMove() {
     if (history.length > 0) {
         // Remove the last state from history
@@ -422,6 +461,56 @@ function undoLastMove() {
     }
 }
 
+function startGameWithAI(level) {
+    aiLevel = level;
+    document.getElementById('aiSelection').style.display = 'none';
+    document.getElementById('boardSizeSelection').style.display = 'flex';
+    document.getElementById('aiLevelDisplay').innerText = `AI Level: ${aiLevel === 'dumb' ? 'Dumb' : 'Smart'}`;
+}
+window.startGameWithAI = startGameWithAI;
+
+function startPVE() {
+    // Set the board size for PVE mode
+    boardSize = 13;
+
+    // Randomly choose the player's color
+    currentStoneColor = Math.random() > 0.5 ? 'black' : 'white';
+
+    // Hide the board size selection and show the game elements
+    document.getElementById('boardSizeSelection').style.display = 'none';
+    document.getElementById('sidePanel').style.display = 'flex';
+    document.getElementById('goBoard').style.display = 'block';
+
+    // Initialize the game
+    initGame();
+
+    // If AI starts first
+    if (currentStoneColor === 'white') {
+        aiMove();
+    }
+}
+
+window.startPVE = startPVE;
+
+function aiMove() {
+    setTimeout(() => {
+        let move;
+        if (aiLevel === 'dumb') {
+            move = getRandomMove(stones, currentStoneColor, boardSize);
+        } else if (aiLevel === 'smart') {
+            move = getBestMove(stones, currentStoneColor, boardSize, 5); // Use getBestMove with max depth of 5
+        }
+
+        if (move) {
+            handleBoardClick(move.i, move.j, ctx.canvas.width / (boardSize + 1));
+        } else {
+            alert('AI passed');
+            // Alternate stone color back to player
+            currentStoneColor = currentStoneColor === 'black' ? 'white' : 'black';
+            updateTurnIndicator(currentStoneColor);
+        }
+    }, 500); // Delay to simulate AI thinking time and allow UI update
+}
 
 
 function handleBoardClick(i, j, cellSize) {
@@ -471,6 +560,7 @@ function handleBoardClick(i, j, cellSize) {
 
         // Place the stone
         stones[i][j] = newStone;
+        latestStone = newStone; // Track the latest stone
 
         // Recalculate qi for all groups
         updateQiForAllGroups(stones, boardSize);
@@ -537,14 +627,19 @@ function handleBoardClick(i, j, cellSize) {
 
         // Update turn indicator
         updateTurnIndicator(currentStoneColor);
+
+        // If it's the AI's turn, make the AI move
+        if (currentStoneColor === 'white') { // Check if it's AI's turn
+            aiMove();
+        }
     } else {
         console.log('Invalid move: either out of bounds or position already occupied');
     }
 }
 
-
-
-
 window.onload = function() {
     // No initial setup needed as it is handled by chooseBoardSize function
 };
+
+// Export necessary functions for AI module
+export { Stone,deepCopyStones, updateQiForAllGroups, findGroup, calculateGroupQi, serializeBoard, startGameWithAI,koHistory};
