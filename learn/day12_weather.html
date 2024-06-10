@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Day12 City Weather</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"
+    integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+    <link
+      href="https://fonts.googleapis.com/css?family=Montserrat:400,900"
+      rel="stylesheet"
+    />
+
+    <style>
+
+      button {
+        position: relative;
+        top: 0;
+        font-family: "Montserrat", sans-serif;
+        font-weight: 400;
+        font-size: 1.3em;
+        color: rgb(111, 185, 255);
+        display: flex,inline-block;
+        margin: 10px;
+        border-style: none;
+      
+        
+      }
+    </style>
+  </head>
+  <body>
+
+
+
+
+    <button onClick ="weatherBalloon(2147714)">Sydney</button>
+    
+    <button onClick ="weatherBalloon(2190324)">Hamilton</button>
+    <button onClick ="weatherBalloon(1796236)">Shanghai</button>
+    <button onClick ="weatherBalloon(1808722)">Hefei</button>
+    <button onClick ="weatherBalloon(5128581)">New York</button>
+    <button onClick ="weatherBalloon(1814906)">Chongqing</button>
+
+    <div style="margin-left: 30px;" id="weather">
+      <h2 id="location"></h2>
+      <h3 id="sealevel"></h3>
+      <div id="description"></div>
+      <h1 id="temp"></h1>
+
+      <h2 id="wind"></h2>
+      <h2 id="humidity"></h2>
+    </div>
+    <script lang="text/javascript">
+
+
+      function weatherBalloon( cityID ) {
+        var key = '1a6346b85ad10ac23974aab92c9719b3';
+        fetch('https://api.openweathermap.org/data/2.5/weather?id=' + cityID+ '&appid=' + key)
+        .then(function(resp) { return resp.json() }) // Convert data to json
+        .then(function(data) {
+          drawWeather(data);
+        })
+        .catch(function() {
+          // catch any errors
+        });
+      }
+
+      function drawWeather( d ) {
+      	var celcius = Math.round(parseFloat(d.main.temp)-273.15);
+       	var fahrenheit = Math.round(((parseFloat(d.main.temp)-273.15)*1.8)+32);
+
+        	document.getElementById('description').innerHTML = d.weather[0].description;
+        	document.getElementById('temp').innerHTML = celcius + '&deg;';
+        	document.getElementById('location').innerHTML = d.name;
+            document.getElementById('humidity').innerHTML = "💦 " + d.main.humidity + '%';
+            document.getElementById('wind').innerHTML = "💨 "+ d.wind.speed + "m/s " 
+
+            
+
+      }
+
+      window.onload = function() {
+        weatherBalloon(1808722);
+      }
+    </script>
+  </body>
+</html>

@@ -1,0 +1,96 @@
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #f0f0f0;
+}
+
+header {
+    background-color: #333;
+    color: #fff;
+    padding: 20px;
+    text-align: center;
+}
+
+header h1 {
+    cursor: pointer;
+}
+
+nav {
+    margin-top: 10px;
+}
+
+nav ul {
+    list-style-type: none;
+    padding: 0;
+}
+
+nav ul li {
+    display: inline;
+    margin-right: 20px;
+}
+
+nav ul li a {
+    color: #fff;
+    text-decoration: none;
+    font-size: 1.2em;
+}
+
+header input {
+    width: 80%;
+    padding: 10px;
+    margin-top: 10px;
+    font-size: 1em;
+}
+
+.container {
+    max-width: 1000px;
+    margin: auto;
+    padding: 20px;
+    background-color: #fff;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+.category {
+    margin-bottom: 40px;
+}
+
+.category h2 {
+    font-size: 2em;
+    margin-bottom: 20px;
+}
+
+.video, .article, .demo {
+    margin-bottom: 20px;
+}
+
+.video h3, .article h3, .demo h3 {
+    font-size: 1.5em;
+    margin-bottom: 10px;
+}
+
+#load-more-videos {
+    display: block;
+    margin: 20px auto;
+    padding: 10px 20px;
+    font-size: 1em;
+    cursor: pointer;
+}
+
+#about p {
+    font-size: 1.2em;
+}
+
+#about a {
+    margin-right: 10px;
+}
+
+@media (max-width: 600px) {
+    .video iframe, .article iframe, .demo iframe {
+        height: 200px;
+    }
+
+    header input {
+        width: 95%;
+    }
+}

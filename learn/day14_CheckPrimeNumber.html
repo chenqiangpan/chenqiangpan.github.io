@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Day14 Check Prime Number</title>
+
+    <style type="text/css">
+
+button{
+  font-size: medium;
+  background-color: bisque;
+  
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+  box-shadow: inset;
+}
+input{
+  font-size: 40px;
+  border-color: rgb(255, 196, 0);
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+}
+.center {
+  padding: 20px 0;
+  text-align: center;
+  font-size: 30px;
+}
+
+    </style>
+  </head>
+  <body>
+
+    <p class="center">Input a Number, and click <b>Check<b></p>
+    <input type="text" id="numberInput" name="numberInput"></br>
+    <button onclick="CheckPrime()">Check</button>
+
+  </br>
+</br>
+   
+    <div class="center" id="sample"></div>
+
+    
+
+    <script lang="text/javascript">
+
+          function CompareNumber()
+          {
+            let textInput = prompt("pick a number: ");
+
+            let textCompare = (textInput>10)? "larger": "smaller";
+
+            document.getElementById('sample').innerHTML = "your number is " + textCompare + " than 10";
+          }
+
+          function CheckPrime()
+          {
+            let numInput = parseInt(document.querySelector('input').value);
+
+            //let numInput = parseInt(prompt("pick a number: "));
+
+            console.log(numInput);
+
+            if(document.querySelector('input').value.length == 0)
+
+{
+
+              document.getElementById('sample').innerHTML = "You need to input something.";
+              
+            }
+            else if(isNaN(numInput)){
+
+              document.getElementById('sample').innerHTML =  "That is not a number!";
+              
+            }
+            else
+            {
+
+
+            let i,flag;
+
+             flag = true;
+
+             for (i =2; i<numInput-1; i++)
+                  {
+                    if(numInput%i ==0)
+                      flag = false;
+                  }
+
+                  let result = flag? numInput + " is a prime number!"
+                  : numInput + " is not a prime number!";
+
+                  document.getElementById('sample').innerHTML = result;
+            }
+
+          }
+
+          //console.log("I don't know you can have comma ", + (5-2));
+
+
+          //document.getElementById('sample') += <p>lalalal</p>;
+
+
+
+          //document.getElementById('newsample').innerHTML = "hahahaqqqq";
+    </script>
+
+
+</br></br></br></br></br>
+<p><a href="index.html">Back</a></p>
+  </body>
+</html>

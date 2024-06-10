@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>day10 javascript loop and async</title>
+    </head>
+<body>
+    <p><a href="index.html">Back</a></p>
+
+    <h1>Learn some Python</h1>
+
+
+    <div>
+
+        Create a Json file by Python:
+
+        <pre>
+            <code>
+                import json
+                data = {
+                    "name": "cqp",
+                    "age": 38,
+                    "city": "Sydney"
+                }
+                with open("data.json", "w") as write_file:
+                    json.dump(data, write_file)
+            </code>
+
+    </div>
+
+    <div>
+
+        Read a Json file by Python:
+
+        <pre>
+            <code>
+                import json
+                with open ("data.json", "r") as read_file:
+                    data = json.load(read_file)
+                    print(data)
+            </code>
+
+    </div>
+
+
+
+</body>
+</html>
+
